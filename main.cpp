@@ -123,6 +123,9 @@ int main()
 
         // solve and print solution
         IloCplex cplex(model);
+
+        cplex.exportMode("VRPModel_2index");
+
         cplex.solve();
 
         double minSumCost = cplex.getObjValue();
