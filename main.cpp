@@ -1,24 +1,38 @@
 #include <iostream>
 #include <ilcplex/ilocplex.h>
+#include <fstream>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
-#include <math.h>
+#include <cmath>
 using namespace std;
+ILOSTLBEGIN;
 
 int main()
 {
-    // Create data
-        // Suppose that there are 15 demand nodes, and root node is located at node 0
-    int numDemandNodes = 15, rootNode = 0, numNodes = numDemandNodes+1;
-        // Suppose that there are 5 trucks, and each has capcity of 25
-    int numTrucks = 5, capacity = 25;
+    // read data
+    freopen("/home/quan/Desktop/Ai_Do?/ORProject/TestDataFile/VRP/eil30.vrp", "rt", stdin);
+    freopen("solution.txt", "wt", stdout);
+    ios::sync_with_stdio(false);
+    cin.tie(0), cout.tie(0);
 
-    srand(time(NULL));
-    int xPos[numNodes], yPos[numNodes];
+    int numNodes;
+    cin>>numNodes;
+
+    int capacity;
+    cin>>capacity;
+
+    int rootNode = 0;
+
+    vector<double> xPos(numNodes), yPos(numNodes);
+    int index;
     for(int i=0; i<numNodes; i++) {
-        xPos[i] = rand()%100;
-        yPos[i] = rand()%100;
+        cin>>index;
+        cin>>xPos[i]>>yPos[i];
+    }
+
+    vector<double> d(numNodes);
+    for(int i=0; i<numNodes; i++) {
+        cin>>index;
+        cin>>d[i];
     }
 
     vector<vector<double>> cost(numNodes, vector<double>(numNodes));
@@ -28,13 +42,7 @@ int main()
         }
     }
 
-    // demand of nodes
-    vector<double> d(numNodes);
-    for(int i=0; i<numNodes; i++) {
-        if(i != rootNode) {
-            d[i] = 1 + rand()%10;
-        }
-    }
+
     IloEnv env;
 
     try{
@@ -82,15 +90,6 @@ int main()
             }
         }
 
-        for(int i=0; i<numNodes; i++) {
-            expr += x[rootNode][i];
-            expr2 += x[i][rootNode];
-        }
-        model.add(expr == numTrucks);
-        model.add(expr2 == numTrucks);
-        expr.clear();
-        expr2.clear();
-
         // f[i][j] denotes the load on the truck from i to j
 
 
@@ -124,11 +123,12 @@ int main()
         // solve and print solution
         IloCplex cplex(model);
 
-        cplex.exportMode("VRPModel_2index");
+        cplex.exportModel("VRPModel_2index");
 
         cplex.solve();
 
         double minSumCost = cplex.getObjValue();
+        int numTrucks = 0;
         cout<< "The minimum cost is "<< minSumCost<< "\n";
         cout<< "The path is:"<< "\n";
         for(int i=0; i<numNodes; i++) {
@@ -145,8 +145,11 @@ int main()
                     }
                 }
                 cout<< "\n";
+                numTrucks += 1;
             }
         }
+
+        cout<< "\nNum Of Trucks: "<< numTrucks;
 
         expr.end();
         expr2.end();
